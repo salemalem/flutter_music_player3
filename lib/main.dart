@@ -42,8 +42,12 @@ List<String> localSongsArtists;
 int _currentIndex;
 
 AudioPlayer audioPlayer;
-Future<int> positionOffline;
-Future<int> durationOffline;
+Duration positionOffline;
+Duration durationOffline;
+
+String durationOfflineString;
+String positionOfflineString;
+
 StreamSubscription _positionSubscription;
 StreamSubscription _durationSubscription;
 int _maxIndex;
@@ -63,6 +67,16 @@ stopLocal(audioPlayer) async {
   await audioPlayer.stop();
 }
 
+String getDurString(Duration dur) {
+  var splittedStrings = dur.toString().split(":");
+  return splittedStrings[1] + ":" + splittedStrings[2].split(".")[0];
+}
+
+String getPosString(Duration pos) {
+  var splittedStrings = pos.toString().split(":");
+  return splittedStrings[1] + ":" + splittedStrings[2].split(".")[0];
+}
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   // global variables
@@ -74,14 +88,16 @@ void main() {
   isPlaying = false;
 
   audioPlayer = AudioPlayer();
-//  _positionSubscription = audioPlayer.onAudioPositionChanged.listen((p) {
-//
-//  });
 
-//  _durationSubscription = audioPlayer.onPlayerStateChanged.listen((s) {
-//    durationOffline = audioPlayer.getDuration();
-//    positionOffline = audioPlayer.getCurrentPosition();
-//  });
+  _durationSubscription = audioPlayer.onDurationChanged.listen((Duration d) {
+    durationOffline = d;
+    durationOfflineString = getDurString(durationOffline);
+  });
+
+  _positionSubscription = audioPlayer.onAudioPositionChanged.listen((Duration  p) {
+    positionOffline = p;
+    positionOfflineString = getPosString(positionOffline);
+  });
 
   getSongs().then((val) {
     localSongsPaths = val[0];
