@@ -29,6 +29,9 @@ dependencies:
 
   audioplayers: ^0.14.2
 
+  flutter_seekbar:
+    git: https://github.com/LiuC520/flutter_seekbar.git
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

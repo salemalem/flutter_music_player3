@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_seekbar/flutter_seekbar.dart' show ProgressValue, SectionTextModel, SeekBar;
 
 
 // source: https://stackoverflow.com/questions/57004220/how-to-get-all-mp3-files-from-internal-as-well-as-external-storage-in-flutter
@@ -48,6 +49,8 @@ Duration durationOffline;
 String durationOfflineString;
 String positionOfflineString;
 
+double posInt;
+
 StreamSubscription _positionSubscription;
 StreamSubscription _durationSubscription;
 int _maxIndex;
@@ -77,6 +80,14 @@ String getPosString(Duration pos) {
   return splittedStrings[1] + ":" + splittedStrings[2].split(".")[0];
 }
 
+double posToInt(String pos, dur) {
+  var posSplitted = pos.split(":");
+  int posInt = int.parse(posSplitted[0]) * 60 + int.parse(posSplitted[1]);
+  var durSplitted = dur.split(":");
+  int durInt = int.parse(durSplitted[0]) * 60 + int.parse(durSplitted[1]);
+  return posInt / durInt;
+}
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   // global variables
@@ -85,19 +96,14 @@ void main() {
   localSongsArtists = [''];
   _currentIndex = 0;
 
+  positionOfflineString = '0:0';
+  durationOfflineString = '1:1';
+  posInt = 0.0;
+
   isPlaying = false;
 
   audioPlayer = AudioPlayer();
 
-  _durationSubscription = audioPlayer.onDurationChanged.listen((Duration d) {
-    durationOffline = d;
-    durationOfflineString = getDurString(durationOffline);
-  });
-
-  _positionSubscription = audioPlayer.onAudioPositionChanged.listen((Duration  p) {
-    positionOffline = p;
-    positionOfflineString = getPosString(positionOffline);
-  });
 
   getSongs().then((val) {
     localSongsPaths = val[0];
@@ -105,6 +111,12 @@ void main() {
     localSongsArtists = val[2];
     _maxIndex = localSongsNames.length - 1;
   });
+
+  Timer.periodic(
+      Duration(seconds: 1),
+          (timer) {
+        posInt = posToInt(positionOfflineString, durationOfflineString);
+      });
 
   runApp(
       MaterialApp(
@@ -124,7 +136,19 @@ class _LocalMusicListState extends State<LocalMusicList> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    _durationSubscription = audioPlayer.onDurationChanged.listen((Duration d) {
+      setState(() {
+        durationOffline = d;
+        durationOfflineString = getDurString(durationOffline);
+      });
+    });
 
+    _positionSubscription = audioPlayer.onAudioPositionChanged.listen((Duration  p) {
+      setState(() {
+        positionOffline = p;
+        positionOfflineString = getPosString(positionOffline);
+      });
+    });
   }
 
 
@@ -251,6 +275,17 @@ class _LocalMusicListState extends State<LocalMusicList> {
                 ],
               ),
             ),
+            Column(
+              children: <Widget>[
+                SeekBar(
+                  progresseight: 10,
+                  value: posInt*100,
+                ),
+                Text(
+                  positionOfflineString + "/" + durationOfflineString
+                )
+              ],
+            )
           ],
         )
       : Container(
