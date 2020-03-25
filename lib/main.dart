@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -70,6 +71,10 @@ stopLocal(audioPlayer) async {
   await audioPlayer.stop();
 }
 
+seekLocal(audioPlayer, milliseconds) async {
+  await audioPlayer.seek(Duration(milliseconds: milliseconds));
+}
+
 String getDurString(Duration dur) {
   var splittedStrings = dur.toString().split(":");
   return splittedStrings[1] + ":" + splittedStrings[2].split(".")[0];
@@ -86,6 +91,13 @@ double posToInt(String pos, dur) {
   var durSplitted = dur.split(":");
   int durInt = int.parse(durSplitted[0]) * 60 + int.parse(durSplitted[1]);
   return posInt / durInt;
+}
+
+int progressToMilliseconds(progress) {
+  var durSplitted = durationOfflineString.split(":");
+  int durSeconds = int.parse(durSplitted[0]) * 60 + int.parse(durSplitted[1]);
+  int durMilliseconds = durSeconds * 1000;
+  return (durMilliseconds * progress).round();
 }
 
 void main() {
@@ -280,6 +292,9 @@ class _LocalMusicListState extends State<LocalMusicList> {
                 SeekBar(
                   progresseight: 10,
                   value: posInt*100,
+                  onValueChanged: (progressValue) {
+                    seekLocal(audioPlayer, progressToMilliseconds(progressValue.progress));
+                  },
                 ),
                 Text(
                   positionOfflineString + "/" + durationOfflineString
