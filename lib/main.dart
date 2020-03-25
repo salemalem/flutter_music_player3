@@ -46,7 +46,7 @@ Future<int> positionOffline;
 Future<int> durationOffline;
 StreamSubscription _positionSubscription;
 StreamSubscription _durationSubscription;
-int _maxIndexes;
+int _maxIndex;
 bool isPlaying;
 
 playLocal(audioPlayer, localFilePath) async {
@@ -71,7 +71,6 @@ void main() {
   localSongsArtists = [''];
   _currentIndex = 0;
 
-  _maxIndexes = localSongsNames.length - 1;
   isPlaying = false;
 
   audioPlayer = AudioPlayer();
@@ -88,6 +87,7 @@ void main() {
     localSongsPaths = val[0];
     localSongsNames = val[1];
     localSongsArtists = val[2];
+    _maxIndex = localSongsNames.length - 1;
   });
 
   runApp(
@@ -190,7 +190,16 @@ class _LocalMusicListState extends State<LocalMusicList> {
                           Icons.skip_previous
                         ),
                         onPressed: () {
-
+                          if(_currentIndex == 0) {
+                            setState(() {
+                              _currentIndex = _maxIndex;
+                            });
+                          } else {
+                            setState(() {
+                              _currentIndex--;
+                            });
+                            playLocal(audioPlayer, localSongsPaths[_currentIndex]);
+                          }
                         },
                       ),
                       IconButton(
@@ -198,13 +207,27 @@ class _LocalMusicListState extends State<LocalMusicList> {
                           ? Icon(Icons.pause)
                           : Icon(Icons.play_arrow),
                         onPressed: () {
-
+                          isPlaying
+                              ? pauseLocal(audioPlayer)
+                              : playLocal(audioPlayer, localSongsPaths[_currentIndex]);
+                          setState(() {
+                            isPlaying = !isPlaying;
+                          });
                         },
                       ),
                       IconButton(
                         icon: Icon(Icons.skip_next),
                         onPressed: () {
-
+                          if(_currentIndex == _maxIndex) {
+                            setState(() {
+                              _currentIndex = 0;
+                            });
+                          } else {
+                            setState(() {
+                              _currentIndex++;
+                            });
+                          }
+                          playLocal(audioPlayer, localSongsPaths[_currentIndex]);
                         },
                       )
                     ],
