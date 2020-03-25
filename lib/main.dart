@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
+import 'package:audioplayers/audioplayers.dart';
+
 
 // source: https://stackoverflow.com/questions/57004220/how-to-get-all-mp3-files-from-internal-as-well-as-external-storage-in-flutter
 Future<List<List<String>>> getSongs() async {
@@ -34,16 +36,54 @@ Future<List<List<String>>> getSongs() async {
 }
 
 // global variables
-List<String> localSongsPaths = [];
-List<String> localSongsNames = [''];
-List<String> localSongsArtists = [''];
-int _currentIndex = 0;
+List<String> localSongsPaths;
+List<String> localSongsNames;
+List<String> localSongsArtists;
+int _currentIndex;
 
-int _maxIndexes = localSongsNames.length - 1;
-bool isPlaying = false;
+AudioPlayer audioPlayer;
+Future<int> positionOffline;
+Future<int> durationOffline;
+StreamSubscription _positionSubscription;
+StreamSubscription _durationSubscription;
+int _maxIndexes;
+bool isPlaying;
+
+playLocal(audioPlayer, localFilePath) async {
+  await audioPlayer.play(localFilePath, isLocal: true);
+  isPlaying = true;
+}
+
+pauseLocal(audioPlayer) async {
+  await audioPlayer.pause();
+  isPlaying = false;
+}
+
+stopLocal(audioPlayer) async {
+  await audioPlayer.stop();
+}
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // global variables
+  localSongsPaths = [];
+  localSongsNames = [''];
+  localSongsArtists = [''];
+  _currentIndex = 0;
+
+  _maxIndexes = localSongsNames.length - 1;
+  isPlaying = false;
+
+  audioPlayer = AudioPlayer();
+//  _positionSubscription = audioPlayer.onAudioPositionChanged.listen((p) {
+//
+//  });
+
+//  _durationSubscription = audioPlayer.onPlayerStateChanged.listen((s) {
+//    durationOffline = audioPlayer.getDuration();
+//    positionOffline = audioPlayer.getCurrentPosition();
+//  });
+
   getSongs().then((val) {
     localSongsPaths = val[0];
     localSongsNames = val[1];
@@ -63,6 +103,15 @@ class LocalMusicList extends StatefulWidget {
 }
 
 class _LocalMusicListState extends State<LocalMusicList> {
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,7 +138,14 @@ class _LocalMusicListState extends State<LocalMusicList> {
                       localSongsArtists[index]
                     ),
                     onTap: () {
-
+                      setState(() {
+                        if (_currentIndex != index) {
+                          stopLocal(audioPlayer);
+                          isPlaying = false;
+                        }
+                        _currentIndex = index;
+                      });
+                      isPlaying ? pauseLocal(audioPlayer) : playLocal(audioPlayer, localSongsPaths[_currentIndex]);
                     },
                   );
                 },

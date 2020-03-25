@@ -27,6 +27,8 @@ dependencies:
   # path provider
   path_provider: ^1.6.1
 
+  audioplayers: ^0.14.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
