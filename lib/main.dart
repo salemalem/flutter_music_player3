@@ -20,6 +20,7 @@ Future<List<List<String>>> getSongs() async {
   List<String> songsPaths = [];
   List<String> songsNames = [];
   List<String> songsArtists = [];
+  List<String> songDurations = [];
   _files = dir.listSync(recursive: true, followLinks: false);
   for(FileSystemEntity entity in _files) {
     String path = entity.path;
@@ -32,15 +33,17 @@ Future<List<List<String>>> getSongs() async {
       var songSplittedNames = songName.split("-");
       songsNames.add(songSplittedNames[0].trimRight().trimLeft());
       songsArtists.add(songSplittedNames[1].trimRight().trimLeft());
+//      songDurations.add(songSplittedNames[2].trimRight().trimLeft());
     }
   }
-  return [songsPaths, songsNames, songsArtists];
+  return [songsPaths, songsNames, songsArtists, songDurations];
 }
 
 // global variables
 List<String> localSongsPaths;
 List<String> localSongsNames;
 List<String> localSongsArtists;
+List<String> localSongDurations;
 int _currentIndex;
 
 AudioPlayer audioPlayer;
@@ -106,6 +109,7 @@ void main() {
   localSongsPaths = [];
   localSongsNames = [''];
   localSongsArtists = [''];
+  localSongDurations = [''];
   _currentIndex = 0;
 
   positionOfflineString = '0:0';
@@ -121,6 +125,7 @@ void main() {
     localSongsPaths = val[0];
     localSongsNames = val[1];
     localSongsArtists = val[2];
+//    localSongDurations = val[3]
     _maxIndex = localSongsNames.length - 1;
   });
 
@@ -148,6 +153,21 @@ class _LocalMusicListState extends State<LocalMusicList> {
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    audioPlayer.onPlayerCompletion.listen((event) {
+      // onComplete
+      if (_currentIndex == _maxIndex) {
+        setState(() {
+          _currentIndex = 0;
+        });
+      } else {
+        setState(() {
+          _currentIndex++;
+        });
+        playLocal(audioPlayer, localSongsPaths[_currentIndex]);
+      }
+    });
+
     _durationSubscription = audioPlayer.onDurationChanged.listen((Duration d) {
       setState(() {
         durationOffline = d;
@@ -161,6 +181,7 @@ class _LocalMusicListState extends State<LocalMusicList> {
         positionOfflineString = getPosString(positionOffline);
       });
     });
+
   }
 
 
@@ -189,6 +210,9 @@ class _LocalMusicListState extends State<LocalMusicList> {
                     subtitle: Text(
                       localSongsArtists[index]
                     ),
+//                    trailing: Text(
+//                      localSongDurations[index]
+//                    ),
                     onTap: () {
                       setState(() {
                         if (_currentIndex != index) {
